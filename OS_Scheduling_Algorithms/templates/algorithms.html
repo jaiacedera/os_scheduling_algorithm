@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Scheduling Algorithms</title>
+    {% load static %}
+    <link rel="icon" type="image/png" href="{% static 'os_logo.png' %}" sizes="48x48">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Poppins:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* General Body and HTML Styles */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Hide scrollbars unless content explicitly overflows within a scrollable area */
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #EDE8F5; /* Light purple background for the entire page */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            height: 100vh; /* Ensure body takes full viewport height */
+            color: #333;
+        }
+
+        /* Main Container that holds header and main content area */
+        .container {
+            display: flex;
+            flex-direction: column;
+            width: 100vw; /* Take full viewport width */
+            height: 100vh; /* Take full viewport height */
+            max-width: 100vw;
+            max-height: 100vh;
+            box-sizing: border-box;
+            padding: 0;
+            position: relative; /* Establish positioning context */
+        }
+
+        /* Header Styles */
+        .header {
+            width: 100%;
+            height: 90px; /* Adjusted height to match image */
+            background-color: #7B44C7; /* Solid purple header background */
+            display: flex;
+            align-items: center;
+            flex-shrink: 0; /* Prevent header from shrinking */
+            padding: 0 50px; /* Padding for content inside header */
+            box-sizing: border-box;
+            position: relative;
+            z-index: 10; /* Ensure header is on top */
+        }
+
+        .header .logo-section {
+            display: flex;
+            align-items: center;
+            color: white; /* Text color */
+            font-weight: bold;
+            font-size: 1.2em;
+            font-family: 'Poppins', sans-serif; /* Font matching image */
+        }
+
+        .header .logo-section img {
+            height: 60px; /* Adjust height as needed for oslogo_name.png */
+            width: auto; /* Maintain aspect ratio */
+            display: block;
+        }
+
+        /* Main Content Area (holds sidebar and right content) */
+        .main-content-area {
+            display: flex;
+            flex-grow: 1; /* Allow to take available vertical space */
+            padding: 30px 50px; /* Padding around the main two columns */
+            gap: 30px; /* Space between sidebar and right content */
+            box-sizing: border-box;
+            background-color: #EDE8F5; /* Background for the area between header and main boxes */
+        }
+
+        /* Sidebar Form Styles (Left White Box) */
+        .sidebar-form {
+            background-color: white; /* White background for the form area */
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            padding: 30px; /* Inner padding for the form */
+            flex-shrink: 0; /* Prevent from shrinking */
+            width: 350px; /* Fixed width for the sidebar */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            height: fit-content; /* Adjust height to content */
+        }
+
+        .algorithm-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 buttons per row */
+            gap: 10px; /* Space between buttons */
+            margin-bottom: 30px; /* Space below buttons */
+            width: 100%; /* Take full width of sidebar */
+        }
+
+        .algo-btn {
+            background-color: #EDE8F5; /* Light purple background for buttons */
+            color: #7B44C7; /* Purple text */
+            border: 1px solid #7B44C7; /* Purple border */
+            padding: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            text-align: center;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9em;
+        }
+
+        .algo-btn:hover {
+            background-color: #7B44C7; /* Darker on hover */
+            color: white; /* White text on hover */
+        }
+
+        .algo-btn.active {
+            background-color: #7B44C7; /* Active button style */
+            color: white;
+        }
+
+        /* Form display styles */
+        .algo-form {
+            display: none; /* Hide all forms by default */
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .algo-form.active {
+            display: block; /* Show active form */
+            width: 100%;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        .form-group {
+            width: 100%; /* Full width for form groups */
+            margin-bottom: 20px; /* Space between form groups */
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #4A0082; /* Darker purple for labels */
+        }
+
+        .form-group input {
+            width: calc(100% - 22px); /* Full width minus padding and border */
+            padding: 10px;
+            border: 1px solid #D1C4E9; /* Light purple border */
+            border-radius: 5px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1em;
+            background-color: #F8F4FF; /* Very light purple input background */
+            color: #333;
+            box-sizing: border-box; /* Include padding and border in the width */
+        }
+
+        .calculate-btn {
+            background-color: #7B44C7; /* Purple button */
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 80%; /* Width for the calculate button */
+            margin-top: 20px;
+            font-family: 'Montserrat', sans-serif;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .calculate-btn:hover {
+            background-color: #6A38B0;
+        }
+
+        /* Right Content Area (Algorithm Display) */
+        .algorithm-display-area {
+            flex: 1; /* Take remaining space */
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Space between content blocks */
+        }
+
+        .algo-header-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 0;
+        }
+        #algo-title {
+            margin-bottom: 0;
+            margin-top: 0;
+        }
+        #algo-description {
+            font-size: 1.1em;
+            color: #555;
+            font-weight: 400;
+            margin-bottom: 0;
+            margin-top: 0;
+            line-height: 1.3;
+        }
+
+        .algorithm-display-area h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.8em; /* Adjusted font size for headings */
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+
+        .algorithm-display-area p {
+            font-size: 1.1em;
+            color: #555;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .table-section {
+            background-color: #7B44C7; /* Purple background for table section */
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            flex-grow: 1; /* Allows it to take available vertical space */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white; /* Text color */
+            font-size: 2em; /* Large text */
+            font-weight: bold;
+            min-height: 250px; /* Minimum height for visibility */
+            padding: 20px; /* Add padding for content inside */
+            box-sizing: border-box; /* Include padding in dimensions */
+            overflow: auto; /* Enable scroll if table content overflows */
+            margin-top: 10px;
+        }
+
+        /* Table specific styles for results */
+        #results-table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            font-size: 0.7em; /* Smaller font for table content */
+        }
+
+        #results-table th, #results-table td {
+            border: 1px solid #9A66D8; /* Lighter purple border for table cells */
+            padding: 8px;
+            text-align: center;
+        }
+
+        #results-table th {
+            background-color: #6A38B0; /* Darker purple for table headers */
+        }
+
+        .awt-section {
+            display: flex;
+            gap: 20px; /* Space between AWT boxes */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+
+        .awt-box {
+            background-color: #D1C4E9; /* Light grey background for AWT boxes */
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            flex: 1; /* Allow boxes to grow and shrink */
+            min-width: 200px; /* Minimum width for AWT boxes */
+            height: 100px; /* Fixed height for AWT boxes */
+            display: flex;
+            flex-direction: column; /* Stack text and value */
+            justify-content: center;
+            align-items: center;
+            color: #4A0082; /* Purple text */
+            font-size: 1.5em; /* Text size */
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .awt-box span.value {
+            font-size: 1.2em; /* Slightly larger for the value */
+            margin-top: 5px;
+        }
+
+        .gantt-chart-section {
+            background-color: #7B44C7; /* Purple background for Gantt chart */
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            height: 100px; /* Fixed height for Gantt chart */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white; /* Text color */
+            font-size: 2em; /* Large text */
+            font-weight: bold;
+            padding: 8px; /* Add padding for content */
+            box-sizing: border-box; /* Include padding in dimensions */
+            overflow-x: auto; /* Allow horizontal scroll for long charts */
+            position: relative;
+        }
+
+        /* Gantt Chart Bar Styles */
+        .gantt-chart-container {
+            display: flex;
+            height: 70%; /* Adjusted height */
+            width: 80%;
+            align-items: flex-end; /* Align bars to the bottom */
+            position: relative;
+        }
+
+        .gantt-bar {
+            background-color: #D1C4E9; /* Light purple for process bars */
+            color: #4A0082;
+            font-size: 0.6em;
+            font-weight: bold;
+            height: 60%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #6A38B0;
+            box-sizing: border-box;
+            position: absolute; /* Position dynamically */
+            top: 0;
+            bottom: 0;
+            margin: auto; /* Center vertically */
+            border-radius: 3px;
+        }
+
+        .gantt-bar.idle {
+            background-color: #555; /* Darker for idle periods */
+            color: white;
+        }
+
+        .time-label {
+            position: absolute;
+            bottom: -20px; /* Position below the bars */
+            font-size: 0.7em;
+            color: white;
+            transform: translateX(-50%); /* Center horizontally */
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-content-area {
+                flex-direction: column; /* Stack sidebar and right content */
+                align-items: center;
+                padding: 20px;
+                gap: 20px;
+            }
+            .sidebar-form {
+                width: 80%; /* Allow sidebar to be wider on medium screens */
+                max-width: 400px;
+            }
+            .algorithm-display-area {
+                width: 90%; /* Take more width when stacked */
+            }
+            .table-section, .gantt-chart-section { /* Adjust for stacked layout */
+                width: 100%; /* Take full width of its parent */
+                margin: 0; /* Remove auto margins */
+            }
+            .table-section {
+                min-height: 200px; /* Adjusted min height */
+            }
+            .gantt-chart-section {
+                height: 120px; /* Adjusted height */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                height: 70px;
+                padding: 0 20px;
+            }
+            .header .logo-section {
+                font-size: 1em;
+                gap: 10px;
+            }
+            .header .logo-section img { /* Adjusted for smaller screens */
+                height: 45px;
+            }
+            .main-content-area {
+                padding: 15px;
+                gap: 15px;
+            }
+            .sidebar-form {
+                padding: 20px;
+                width: 95%;
+            }
+            .algo-btn {
+                padding: 8px 0;
+                font-size: 0.8em;
+            }
+            .form-group label {
+                font-size: 0.9em;
+            }
+            .form-group input {
+                padding: 8px;
+                font-size: 0.9em;
+            }
+            .calculate-btn {
+                padding: 12px 25px;
+                font-size: 1em;
+                position: absolute;
+            }
+            .algorithm-display-area h2 {
+                font-size: 1.4em;
+            }
+            .algorithm-display-area p {
+                font-size: 0.9em;
+            }
+            .table-section {
+                font-size: 1.5em;
+                min-height: 150px;
+            }
+            .awt-box {
+                font-size: 1.2em;
+                min-width: 150px;
+                height: 80px;
+            }
+            .gantt-chart-section {
+                font-size: 1.5em;
+                height: 100px;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .header .logo-section {
+                font-size: 0.9em;
+                gap: 8px;
+            }
+            .header .logo-section img { /* Adjusted for very small screens */
+                height: 35px;
+            }
+            .algorithm-buttons {
+                grid-template-columns: repeat(2, 1fr); /* 2 buttons per row on very small screens */
+            }
+            .awt-section {
+                flex-direction: column; /* Stack AWT boxes */
+                align-items: center;
+            }
+            .awt-box {
+                width: 90%; /* Full width when stacked */
+            }
+        }
+
+        /* Add section-label CSS */
+        .section-label {
+            font-size: 1em;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 8px;
+            margin-left: 2px;
+            text-align: left;
+            letter-spacing: 0.5px;
+        }
+        .table-section .section-label,
+        .gantt-chart-section .section-label {
+            color: #fff;
+        }
+        .awt-section .section-label {
+            color: #4A0082;
+            margin-bottom: 10px;
+            margin-top: -10px;
+            font-size: 0.95em;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-section">
+                <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+                    <img src="{% static 'oslogo_name.png' %}" alt="OS Scheduling Algorithms Logo">
+                </a>
+            </div>
+        </header>
+        <main class="main-content-area">
+            <div class="sidebar-form">
+                <div class="algorithm-buttons">
+                    <button class="algo-btn" onclick="showForm('fcfs'); return false;">FCFS</button>
+                    <button class="algo-btn" onclick="showForm('sjf'); return false;">SJF</button>
+                    <button class="algo-btn" onclick="showForm('srtf'); return false;">SRTF</button>
+                    <button class="algo-btn" onclick="showForm('npp'); return false;">NPP</button>
+                    <button class="algo-btn" onclick="showForm('pp'); return false;">PP</button>
+                    <button class="algo-btn" onclick="showForm('rr'); return false;">RR</button>
+                </div>
+                <form id="fcfs-form" class="algo-form">
+                    <div class="form-group">
+                        <label for="fcfs-num-processes">No. of Processes:</label>
+                        <input type="number" id="fcfs-num-processes" placeholder="e.g., 3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fcfs-starting-pid">Starting PID No.:</label>
+                        <input type="number" id="fcfs-starting-pid" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fcfs-arrival-time">Arrival Time:</label>
+                        <input type="text" id="fcfs-arrival-time" placeholder="e.g., 0 1 2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fcfs-burst-time">Burst Time:</label>
+                        <input type="text" id="fcfs-burst-time" placeholder="e.g., 5 3 8" required>
+                    </div>
+                    <button type="submit" class="calculate-btn">CALCULATE</button>
+                </form>
+                <form id="sjf-form" class="algo-form">
+                    <div class="form-group">
+                        <label for="sjf-num-processes">No. of Processes:</label>
+                        <input type="number" id="sjf-num-processes" placeholder="e.g., 3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sjf-starting-pid">Starting PID No.:</label>
+                        <input type="number" id="sjf-starting-pid" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sjf-arrival-time">Arrival Time:</label>
+                        <input type="text" id="sjf-arrival-time" placeholder="e.g., 0 1 2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sjf-burst-time">Burst Time:</label>
+                        <input type="text" id="sjf-burst-time" placeholder="e.g., 5 3 8" required>
+                    </div>
+                    <button type="submit" class="calculate-btn">CALCULATE</button>
+                </form>
+                <form id="srtf-form" class="algo-form">
+                    <div class="form-group">
+                        <label for="srtf-num-processes">No. of Processes:</label>
+                        <input type="number" id="srtf-num-processes" placeholder="e.g., 3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="srtf-starting-pid">Starting PID No.:</label>
+                        <input type="number" id="srtf-starting-pid" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="srtf-arrival-time">Arrival Time:</label>
+                        <input type="text" id="srtf-arrival-time" placeholder="e.g., 0 1 2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="srtf-burst-time">Burst Time:</label>
+                        <input type="text" id="srtf-burst-time" placeholder="e.g., 5 3 8" required>
+                    </div>
+                    <button type="submit" class="calculate-btn">CALCULATE</button>
+                </form>
+                <form id="npp-form" class="algo-form">
+                    <div class="form-group">
+                        <label for="npp-num-processes">No. of Processes:</label>
+                        <input type="number" id="npp-num-processes" placeholder="e.g., 3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="npp-starting-pid">Starting PID No.:</label>
+                        <input type="number" id="npp-starting-pid" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="npp-arrival-time">Arrival Time:</label>
+                        <input type="text" id="npp-arrival-time" placeholder="e.g., 0 1 2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="npp-burst-time">Burst Time:</label>
+                        <input type="text" id="npp-burst-time" placeholder="e.g., 5 3 8" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="npp-priority">Priority:</label>
+                        <input type="text" id="npp-priority" placeholder="e.g., 1 2 3" required>
+                    </div>
+                    <button type="submit" class="calculate-btn">CALCULATE</button>
+                </form>
+                <form id="pp-form" class="algo-form">
+                    <div class="form-group">
+                        <label for="pp-num-processes">No. of Processes:</label>
+                        <input type="number" id="pp-num-processes" placeholder="e.g., 3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pp-starting-pid">Starting PID No.:</label>
+                        <input type="number" id="pp-starting-pid" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pp-arrival-time">Arrival Time:</label>
+                        <input type="text" id="pp-arrival-time" placeholder="e.g., 0 1 2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pp-burst-time">Burst Time:</label>
+                        <input type="text" id="pp-burst-time" placeholder="e.g., 5 3 8" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pp-priority">Priority:</label>
+                        <input type="text" id="pp-priority" placeholder="e.g., 1 2 3" required>
+                    </div>
+                    <button type="submit" class="calculate-btn">CALCULATE</button>
+                </form>
+                <form id="rr-form" class="algo-form">
+                    <div class="form-group">
+                        <label for="rr-num-processes">No. of Processes:</label>
+                        <input type="number" id="rr-num-processes" placeholder="e.g., 3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="rr-starting-pid">Starting PID No.:</label>
+                        <input type="number" id="rr-starting-pid" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="rr-arrival-time">Arrival Time:</label>
+                        <input type="text" id="rr-arrival-time" placeholder="e.g., 0 1 2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="rr-burst-time">Burst Time:</label>
+                        <input type="text" id="rr-burst-time" placeholder="e.g., 5 3 8" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="rr-q">Q:</label>
+                        <input type="number" id="rr-q" placeholder="e.g., 2" required>
+                    </div>
+                    <button type="submit" class="calculate-btn">CALCULATE</button>
+                </form>
+            </div>
+            <div class="algorithm-display-area">
+                <div class="algo-header-row">
+                    <h2 id="algo-title">Scheduling Algorithms</h2>
+                    <span id="algo-description">meaning</span>
+                </div>
+                <div id="table-section" class="table-section hidden">
+                    <div id="results-table-container"></div>
+                </div>
+                <div id="awt-section" class="awt-section hidden">
+                    <div class="awt-box">Average Waiting Time (AWT)<span id="awt-value" class="value">0.00</span></div>
+                    <div class="awt-box">Average Turnaround Time (ATAT)<span id="atat-value" class="value">0.00</span></div>
+                </div>
+                <div id="gantt-chart-section" class="gantt-chart-section hidden">
+                    <div id="gantt-chart-container" class="gantt-chart-container"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        // JavaScript to handle active button state and form visibility
+        document.addEventListener('DOMContentLoaded', () => {
+            const algoButtons = document.querySelectorAll('.algo-btn');
+            
+            // --- New: Read URL parameter for initial display ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialAlgo = urlParams.get('algo');
+
+            if (initialAlgo) {
+                // Find the button corresponding to the initialAlgo and activate it
+                const initialButton = document.querySelector(`.algo-btn[onclick*="${initialAlgo}"]`);
+                if (initialButton) {
+                    initialButton.classList.add('active');
+                }
+                showForm(initialAlgo); // Show the form for the initial algorithm
+            } else {
+                // If no algo parameter, default to FCFS and update right panel
+                const fcfsButton = document.querySelector('.algo-btn[onclick*="fcfs"]');
+                if (fcfsButton) {
+                    fcfsButton.classList.add('active');
+                    showForm('fcfs'); // This will set the form, title, and description for FCFS
+                }
+            }
+            // --- End New ---
+
+
+            algoButtons.forEach(button => {
+                button.addEventListener('click', (event) => {
+                    // Remove active state from all buttons
+                    algoButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active state to the clicked button
+                    event.target.classList.add('active');
+
+                    // Extract the algorithm name from the onclick attribute
+                    const algoName = event.target.onclick.toString().match(/'([^']+)'/)[1];
+                    showForm(algoName);
+                });
+            });
+
+            // Add event listeners for form submissions
+            document.getElementById('fcfs-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                handleCalculation('fcfs');
+            });
+            document.getElementById('sjf-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                handleCalculation('sjf');
+            });
+            document.getElementById('srtf-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                handleCalculation('srtf');
+            });
+            document.getElementById('npp-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                handleCalculation('npp');
+            });
+            document.getElementById('pp-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                handleCalculation('pp');
+            });
+            document.getElementById('rr-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                handleCalculation('rr');
+            });
+        });
+
+        function showForm(algorithm) {
+            // Hide all forms
+            document.querySelectorAll('.algo-form').forEach(form => {
+                form.classList.remove('active');
+            });
+
+            // Show the selected form by adding the 'active' class
+            const selectedForm = document.getElementById(algorithm + '-form');
+            if (selectedForm) {
+                selectedForm.classList.add('active');
+                // Update algorithm title and description based on the selected algorithm
+                document.getElementById('algo-title').textContent = getAlgorithmTitle(algorithm);
+                document.getElementById('algo-description').textContent = getAlgorithmDescription(algorithm);
+            }
+            // Clear previous results when switching algorithms
+            clearResults();
+        }
+
+        function getAlgorithmTitle(algorithm) {
+            switch (algorithm) {
+                case 'fcfs': return 'First Come First Serve (FCFS)';
+                case 'sjf': return 'Shortest Job First (SJF)';
+                case 'srtf': return 'Shortest Remaining Time First (SRTF)';
+                case 'npp': return 'Non-Preemptive Priority (NPP)';
+                case 'pp': return 'Preemptive Priority (PP)';
+                case 'rr': return 'Round Robin (RR)';
+                default: return 'Scheduling Algorithms';
+            }
+        }
+
+        function getAlgorithmDescription(algorithm) {
+            switch (algorithm) {
+                case 'fcfs': return 'Processes are scheduled in the order they arrive, with no preemption.';
+                case 'sjf': return 'The process with the smallest burst time is executed next. Non-preemptive.';
+                case 'srtf': return 'The process with the shortest remaining burst time is executed. Preemptive.';
+                case 'npp': return 'Processes are scheduled based on priority, with no preemption.';
+                case 'pp': return 'Processes are scheduled based on priority, with preemption.';
+                case 'rr': return 'Each process is assigned a fixed time slice (quantum), and processes are executed in a cyclic manner.';
+                default: return 'Learn Scheduling the Smart Way.';
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results-table-container').innerHTML = '';
+            document.getElementById('awt-value').textContent = '0.00';
+            document.getElementById('atat-value').textContent = '0.00';
+            document.getElementById('gantt-chart-container').innerHTML = '';
+            document.getElementById('table-section').classList.add('hidden');
+            document.getElementById('awt-section').classList.add('hidden');
+            document.getElementById('gantt-chart-section').classList.add('hidden');
+        }
+
+        // --- Backend Simulation Functions (from scheduling.py) ---
+        // You would typically call a backend API here. For this example,
+        // we'll simulate the logic directly in the frontend.
+        class Process {
+            constructor(pid, at, bt, priority = 0) {
+                this.pid = pid;
+                this.at = at;
+                this.bt = bt;
+                this.rt = bt; // Remaining time
+                this.priority = priority;
+                this.st = -1; // Start time
+                this.et = 0;  // End time
+                this.wt = 0;  // Waiting time
+                this.tat = 0; // Turnaround time
+                this.completed = false;
+            }
+
+            compute_times(current_time) {
+                this.et = current_time;
+                this.tat = this.et - this.at;
+                this.wt = this.tat - this.bt;
+                if (this.wt < 0) this.wt = 0; // Ensure waiting time isn't negative
+            }
+        }
+
+        function insert_idle_slots(gantt) {
+            if (!gantt || gantt.length === 0) {
+                return [];
+            }
+            let new_gantt = [];
+            let currentTime = 0;
+
+            for (let i = 0; i < gantt.length; i++) {
+                const [pid, start, end] = gantt[i];
+                if (start > currentTime) {
+                    new_gantt.push(["Idle", currentTime, start]);
+                }
+                new_gantt.push(gantt[i]);
+                currentTime = end;
+            }
+            return new_gantt;
+        }
+
+        function fcfs(processes) {
+            processes.sort((a, b) => a.at - b.at);
+            let time = 0;
+            const gantt = [];
+            for (const p of processes) {
+                if (time < p.at) {
+                    time = p.at; // CPU idles until process arrives
+                }
+                p.st = time;
+                time += p.bt;
+                p.compute_times(time);
+                gantt.push([`P${p.pid}`, p.st, p.et]);
+            }
+            return { processes, gantt: insert_idle_slots(gantt) };
+        }
+
+        function sjf_np(processes) {
+            let time = 0;
+            let completed = 0;
+            const gantt = [];
+            const sortedProcesses = [...processes].sort((a, b) => a.at - b.at); // Sort by arrival for initial check
+
+            while (completed < processes.length) {
+                const ready = processes.filter(p => p.at <= time && !p.completed);
+                if (ready.length === 0) {
+                    time++;
+                    continue;
+                }
+                const current = ready.reduce((minP, p) => (p.bt < minP.bt || (p.bt === minP.bt && p.at < minP.at) ? p : minP)); // Smallest BT, then earliest AT
+
+                current.st = time;
+                time += current.bt;
+                current.compute_times(time);
+                current.completed = true;
+                gantt.push([`P${current.pid}`, current.st, current.et]);
+                completed++;
+            }
+            return { processes, gantt: insert_idle_slots(gantt) };
+        }
+
+        function srtf(processes) {
+            let time = 0;
+            let completed = 0;
+            const gantt = [];
+            let last_pid = null; // Track the last process run
+            let current_process = null;
+            const initialProcesses = [...processes]; // Keep a copy of original processes for tracking
+
+            while (completed < processes.length) {
+                const available = initialProcesses.filter(p => p.at <= time && p.rt > 0);
+
+                if (available.length === 0) {
+                    if (current_process && current_process.rt > 0) { // If a process was running, finish its segment
+                        if (gantt.length > 0 && gantt[gantt.length - 1][0] === `P${current_process.pid}`) {
+                             gantt[gantt.length - 1][2] = time; // Extend last segment if same process
+                        } else {
+                            gantt.push([`P${current_process.pid}`, current_process.st, time]);
+                        }
+                    }
+                    current_process = null; // No process to run, CPU is idle
+                    time++;
+                    continue;
+                }
+
+                // Find the process with the shortest remaining time
+                let next_process = available.reduce((minP, p) => 
+                    (p.rt < minP.rt || (p.rt === minP.rt && p.at < minP.at) ? p : minP)
+                );
+
+                if (current_process !== next_process) {
+                    // Preemption or new process starts
+                    if (current_process && current_process.rt > 0) { // If there was a running process, complete its segment
+                        if (gantt.length > 0 && gantt[gantt.length - 1][0] === `P${current_process.pid}`) {
+                            gantt[gantt.length - 1][2] = time;
+                        } else {
+                            gantt.push([`P${current_process.pid}`, current_process.st, time]);
+                        }
+                    }
+                    current_process = next_process;
+                    if (current_process.st === -1) { // Set start time only on first execution
+                        current_process.st = time;
+                    }
+                }
+                
+                current_process.rt--;
+                time++;
+
+                if (current_process.rt === 0) {
+                    current_process.compute_times(time);
+                    current_process.completed = true;
+                    completed++;
+                    // Add the completed process segment to gantt
+                    if (gantt.length > 0 && gantt[gantt.length - 1][0] === `P${current_process.pid}`) {
+                        gantt[gantt.length - 1][2] = time;
+                    } else {
+                        gantt.push([`P${current_process.pid}`, current_process.st, time]);
+                    }
+                    current_process = null; // No process running after completion
+                }
+            }
+            return { processes: initialProcesses, gantt: insert_idle_slots(gantt) };
+        }
+
+        function priority_np(processes) {
+            let time = 0;
+            let completed = 0;
+            const gantt = [];
+            const sortedProcesses = [...processes].sort((a, b) => a.at - b.at); // Sort by arrival for initial check
+
+            while (completed < processes.length) {
+                const ready = processes.filter(p => p.at <= time && !p.completed);
+                if (ready.length === 0) {
+                    time++;
+                    continue;
+                }
+                // Smallest priority (higher priority value means higher priority), then earliest AT
+                const current = ready.reduce((minP, p) => (p.priority < minP.priority || (p.priority === minP.priority && p.at < minP.at) ? p : minP));
+
+                current.st = time;
+                time += current.bt;
+                current.compute_times(time);
+                current.completed = true;
+                gantt.push([`P${current.pid}`, current.st, current.et]);
+                completed++;
+            }
+            return { processes, gantt: insert_idle_slots(gantt) };
+        }
+
+        function priority_p(processes) {
+            let time = 0;
+            let completed = 0;
+            const gantt = [];
+            let last_pid = null; // Track the last process run
+            let current_process = null;
+            const initialProcesses = [...processes]; // Keep a copy of original processes for tracking
+
+            while (completed < processes.length) {
+                const available = initialProcesses.filter(p => p.at <= time && p.rt > 0);
+
+                if (available.length === 0) {
+                    if (current_process && current_process.rt > 0) { // If a process was running, finish its segment
+                         if (gantt.length > 0 && gantt[gantt.length - 1][0] === `P${current_process.pid}`) {
+                             gantt[gantt.length - 1][2] = time;
+                        } else {
+                            gantt.push([`P${current_process.pid}`, current_process.st, time]);
+                        }
+                    }
+                    current_process = null; // No process to run, CPU is idle
+                    time++;
+                    continue;
+                }
+
+                // Find the process with the highest priority (smallest priority number), then earliest arrival
+                let next_process = available.reduce((minP, p) => 
+                    (p.priority < minP.priority || (p.priority === minP.priority && p.at < minP.at) ? p : minP)
+                );
+
+                if (current_process !== next_process) {
+                    // Preemption or new process starts
+                    if (current_process && current_process.rt > 0) { // If there was a running process, complete its segment
+                        if (gantt.length > 0 && gantt[gantt.length - 1][0] === `P${current_process.pid}`) {
+                            gantt[gantt.length - 1][2] = time;
+                        } else {
+                            gantt.push([`P${current_process.pid}`, current_process.st, time]);
+                        }
+                    }
+                    current_process = next_process;
+                    if (current_process.st === -1) { // Set start time only on first execution
+                        current_process.st = time;
+                    }
+                }
+                
+                current_process.rt--;
+                time++;
+
+                if (current_process.rt === 0) {
+                    current_process.compute_times(time);
+                    current_process.completed = true;
+                    completed++;
+                    // Add the completed process segment to gantt
+                     if (gantt.length > 0 && gantt[gantt.length - 1][0] === `P${current_process.pid}`) {
+                        gantt[gantt.length - 1][2] = time;
+                    } else {
+                        gantt.push([`P${current_process.pid}`, current_process.st, time]);
+                    }
+                    current_process = null; // No process running after completion
+                }
+            }
+            return { processes: initialProcesses, gantt: insert_idle_slots(gantt) };
+        }
+
+        function round_robin(processes, quantum) {
+            let time = 0;
+            let completed = 0;
+            const queue = [];
+            const gantt = [];
+            const initialProcesses = [...processes].sort((a, b) => a.at - b.at); // Sort by arrival
+
+            let processIndex = 0;
+
+            while (completed < initialProcesses.length || queue.length > 0) {
+                // Add newly arrived processes to the queue
+                while (processIndex < initialProcesses.length && initialProcesses[processIndex].at <= time) {
+                    queue.push(initialProcesses[processIndex]);
+                    processIndex++;
+                }
+
+                if (queue.length === 0) {
+                    time++;
+                    continue; // CPU idle
+                }
+
+                const current = queue.shift(); // Dequeue a process
+
+                if (current.st === -1) {
+                    current.st = time; // Set start time if it's the first execution
+                }
+
+                const exec_time = Math.min(current.rt, quantum);
+                
+                // Add to Gantt chart (coalesce if same process runs consecutively)
+                if (gantt.length > 0 && gantt[gantt.length - 1][0] === `P${current.pid}`) {
+                    gantt[gantt.length - 1][2] += exec_time;
+                } else {
+                    gantt.push([`P${current.pid}`, time, time + exec_time]);
+                }
+
+                time += exec_time;
+                current.rt -= exec_time;
+
+                // Add any processes that arrived during this execution slice
+                while (processIndex < initialProcesses.length && initialProcesses[processIndex].at <= time) {
+                    queue.push(initialProcesses[processIndex]);
+                    processIndex++;
+                }
+                
+                if (current.rt > 0) {
+                    queue.push(current); // Add back to queue if not finished
+                } else {
+                    current.compute_times(time);
+                    current.completed = true;
+                    completed++;
+                }
+            }
+            return { processes: initialProcesses, gantt: insert_idle_slots(gantt) };
+        }
+
+        // --- Frontend Display Functions ---
+
+        function handleCalculation(algorithm) {
+            const numProcesses = parseInt(document.getElementById(`${algorithm}-num-processes`).value);
+            const startingPid = parseInt(document.getElementById(`${algorithm}-starting-pid`).value);
+            const arrivalTimeStr = document.getElementById(`${algorithm}-arrival-time`).value;
+            const burstTimeStr = document.getElementById(`${algorithm}-burst-time`).value;
+            
+            const arrivalTimes = arrivalTimeStr.split(' ').map(Number);
+            const burstTimes = burstTimeStr.split(' ').map(Number);
+
+            if (numProcesses !== arrivalTimes.length || numProcesses !== burstTimes.length) {
+                alert("Number of processes must match the number of arrival and burst times.");
+                return;
+            }
+
+            let processes = [];
+            let results;
+            let quantum;
+            let priorityTimes;
+
+            for (let i = 0; i < numProcesses; i++) {
+                let pid = startingPid + i;
+                if (algorithm === 'npp' || algorithm === 'pp') {
+                    const priorityTimeStr = document.getElementById(`${algorithm}-priority`).value;
+                    priorityTimes = priorityTimeStr.split(' ').map(Number);
+                    if (numProcesses !== priorityTimes.length) {
+                         alert("Number of processes must match the number of priority values.");
+                         return;
+                    }
+                    processes.push(new Process(pid, arrivalTimes[i], burstTimes[i], priorityTimes[i]));
+                } else {
+                    processes.push(new Process(pid, arrivalTimes[i], burstTimes[i]));
+                }
+            }
+
+            // Call the appropriate scheduling algorithm
+            switch (algorithm) {
+                case 'fcfs':
+                    results = fcfs(processes);
+                    break;
+                case 'sjf':
+                    results = sjf_np(processes);
+                    break;
+                case 'srtf':
+                    results = srtf(processes);
+                    break;
+                case 'npp':
+                    results = priority_np(processes);
+                    break;
+                case 'pp':
+                    results = priority_p(processes);
+                    break;
+                case 'rr':
+                    quantum = parseInt(document.getElementById('rr-q').value);
+                    if (isNaN(quantum) || quantum <= 0) {
+                        alert("Quantum (Q) must be a positive number for Round Robin.");
+                        return;
+                    }
+                    results = round_robin(processes, quantum);
+                    break;
+                default:
+                    console.error("Unknown algorithm:", algorithm);
+                    return;
+            }
+
+            displayResults(results.processes, results.gantt);
+        }
+
+        function displayResults(processes, ganttChart) {
+            document.getElementById('table-section').classList.remove('hidden');
+            document.getElementById('awt-section').classList.remove('hidden');
+            document.getElementById('gantt-chart-section').classList.remove('hidden');
+            // Display Table
+            const tableContainer = document.getElementById('results-table-container');
+            let tableHTML = `
+                <table id="results-table">
+                    <thead>
+                        <tr>
+                            <th>PID</th>
+                            <th>Arrival Time</th>
+                            <th>Burst Time</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Waiting Time</th>
+                            <th>Turnaround Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            let totalWaitingTime = 0;
+            let totalTurnaroundTime = 0;
+
+            processes.forEach(p => {
+                tableHTML += `
+                    <tr>
+                        <td>P${p.pid}</td>
+                        <td>${p.at}</td>
+                        <td>${p.bt}</td>
+                        <td>${p.st !== -1 ? p.st : 'N/A'}</td>
+                        <td>${p.et}</td>
+                        <td>${p.wt}</td>
+                        <td>${p.tat}</td>
+                    </tr>
+                `;
+                totalWaitingTime += p.wt;
+                totalTurnaroundTime += p.tat;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            tableContainer.innerHTML = tableHTML;
+
+            // Display AWT and ATAT
+            const avgWaitingTime = totalWaitingTime / processes.length;
+            const avgTurnaroundTime = totalTurnaroundTime / processes.length;
+            document.getElementById('awt-value').textContent = avgWaitingTime.toFixed(2);
+            document.getElementById('atat-value').textContent = avgTurnaroundTime.toFixed(2);
+
+            // Display Gantt Chart
+            const ganttChartContainer = document.getElementById('gantt-chart-container');
+            ganttChartContainer.innerHTML = ''; // Clear previous chart
+            
+            // Calculate total time for scaling
+            let totalTime = 0;
+            if (ganttChart.length > 0) {
+                totalTime = ganttChart[ganttChart.length - 1][2];
+            }
+            if (totalTime === 0) { // Avoid division by zero if no processes or instant completion
+                ganttChartContainer.innerHTML = 'No Gantt Chart to Display.';
+                return;
+            }
+
+            ganttChartContainer.style.position = 'relative'; // Ensure relative positioning for absolute bars
+
+            ganttChart.forEach(segment => {
+                const [pid, start, end] = segment;
+                const duration = end - start;
+                const widthPercentage = (duration / totalTime) * 100;
+                const leftPercentage = (start / totalTime) * 100;
+
+                const bar = document.createElement('div');
+                bar.classList.add('gantt-bar');
+                if (pid === "Idle") {
+                    bar.classList.add('idle');
+                    bar.textContent = "IDLE";
+                } else {
+                    bar.textContent = pid;
+                }
+                bar.style.width = `${widthPercentage}%`;
+                bar.style.left = `${leftPercentage}%`;
+
+                // Add start time label
+                const startLabel = document.createElement('span');
+                startLabel.classList.add('time-label');
+                startLabel.textContent = start;
+                startLabel.style.left = `${leftPercentage}%`;
+                ganttChartContainer.appendChild(startLabel);
+
+                ganttChartContainer.appendChild(bar);
+            });
+
+            // Add the final time label
+            const finalTimeLabel = document.createElement('span');
+            finalTimeLabel.classList.add('time-label');
+            finalTimeLabel.textContent = totalTime;
+            finalTimeLabel.style.left = `100%`; // Position at the very end
+            ganttChartContainer.appendChild(finalTimeLabel);
+        }
+    </script>
+</body>
+</html>

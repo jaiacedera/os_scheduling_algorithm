@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Scheduling Algorithm Calculator</title>
+    {% load static %}
+    <link rel="icon" type="image/png" href="{% static 'os_logo.png' %}" sizes="48x48">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Poppins:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Added to prevent scrollbars from image overlap */
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #EDE8F5;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            height: 100vh;
+            color: #333;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            box-sizing: border-box;
+            padding: 0;
+            position: relative; /* Added for absolute positioning context */
+        }
+        .header {
+            width: 100vw;
+            padding: 20px 0;
+            background: linear-gradient(90deg, #7B44C7 0%, transparent 100%);
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            position: relative; /* Ensure z-index works for logo */
+            z-index: 2; /* Keep header content above the main image */
+        }
+        .logo {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 50px;
+            flex-shrink: 0;
+        }
+        .logo img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        .content-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 40px 50px;
+            flex-wrap: wrap;
+            flex-grow: 1;
+            gap: 20px;
+            height: 100%;
+            margin-left: 80px;
+            position: relative; /* Needed for text and other content positioning */
+            z-index: 1; /* Ensure content is below overlapping image if needed */
+        }
+        .text-content {
+            flex: 1;
+            min-width: 300px;
+            box-sizing: border-box;
+        }
+        .text-content h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 3.5em;
+            color: #4A0082;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            font-weight: 700;
+        }
+        .text-content .tagline {
+            font-size: 1.6em;
+            color: #6A1B9A;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+        .text-content .description {
+            font-size: 1.1em;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+        .btn-get-started {
+            display: inline-block;
+            background-color: #7B44C7;
+            color: white;
+            padding: 15px 35px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .btn-get-started:hover {
+            background-color: #6A38B0;
+        }
+        .image-content {
+            /* --- MODIFIED PART START --- */
+            position: absolute; /* Allows positioning relative to the nearest positioned ancestor (container) */
+            top: 0px; /* Adjust this value to control how much it overlaps the header */
+            right: 0px; /* Position from the right edge */
+            width: 70%; /* Make the image larger */
+            max-width: 900px; /* Set a maximum width for the image container */
+            display: flex;
+            justify-content: flex-end; /* Pushes the image to the right within its container */
+            align-items: flex-start; /* Aligns content to the top */
+            z-index: 0; /* Place image below header content, but above body background */
+            transform: translateY(-20px); /* Fine-tune vertical position to overlap slightly, adjust as needed */
+            /* --- MODIFIED PART END --- */
+        }
+        .image-content img {
+            max-width: 100%;
+            height: auto; /* Maintain aspect ratio */
+            display: block;
+        }
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .container {
+                max-width: 1000px;
+            }
+            .text-content h1 {
+                font-size: 3em;
+            }
+            .text-content .tagline {
+                font-size: 1.4em;
+            }
+            .image-content {
+                min-width: 400px;
+                max-width: 600px;
+            }
+        }
+        @media (max-width: 992px) {
+            .container {
+                max-width: 90vw;
+            }
+            .content-section {
+                flex-direction: column;
+                align-items: center;
+                padding: 20px 0;
+                height: auto;
+            }
+            .text-content {
+                padding-right: 0;
+                margin-bottom: 40px;
+                text-align: center;
+                margin-left: 0;
+                order: 2;
+            }
+            .image-content {
+                position: relative; /* Revert to relative for stacking on smaller screens */
+                top: auto;
+                right: auto;
+                min-width: unset;
+                width: 80%;
+                max-width: 500px;
+                margin-bottom: 30px;
+                order: 1;
+                padding-right: 0;
+                transform: translateY(0); /* Reset transform */
+            }
+            .header {
+                padding: 15px 0;
+                margin-bottom: 20px;
+            }
+            .logo {
+                margin-left: 20px;
+                width: 50px;
+                height: 50px;
+            }
+            .text-content h1 {
+                font-size: 2.5em;
+            }
+        }
+        @media (max-width: 768px) {
+            .container {
+                max-width: 100vw;
+                padding: 10px;
+            }
+            .text-content h1 {
+                font-size: 2em;
+            }
+            .text-content .tagline {
+                font-size: 1.2em;
+            }
+            .text-content .description {
+                font-size: 1em;
+            }
+            .btn-get-started {
+                padding: 12px 25px;
+                font-size: 1em;
+            }
+            .image-content {
+                max-width: 400px;
+            }
+        }
+        @media (max-width: 576px) {
+            .container {
+                padding: 5px;
+            }
+            .header {
+                padding: 10px 0;
+            }
+            .logo {
+                width: 40px;
+                height: 40px;
+                margin-left: 10px;
+            }
+            .text-content h1 {
+                font-size: 1.8em;
+            }
+            .text-content .tagline {
+                font-size: 1em;
+            }
+            .image-content {
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <img src="{% static 'os_logo.png' %}" alt="OS Logo">
+            </div>
+        </header>
+        <main class="content-section">
+            <div class="text-content">
+                <h1>OS SCHEDULING<br>ALGORITHM<br>CALCULATOR</h1>
+                <p class="tagline">Learn Scheduling the Smart Way.</p>
+                <p class="description">
+                    Dive into OS scheduling with interactive <br>simulations. Try out different algorithms <br>and
+                    see how processes are managed <br>behind the scenes.
+                </p>
+                <a href="/algorithms/" class="btn-get-started">Get Started</a>
+            </div>
+            <div class="image-content">
+                <img src="{% static 'landing_image.png' %}" alt="OS Scheduling Illustration">
+            </div>
+        </main>
+    </div>
+</body>
+</html>
